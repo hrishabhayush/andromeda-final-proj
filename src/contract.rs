@@ -105,6 +105,7 @@ fn list_service(
     Ok(Response::new()
         .add_attribute("action", "list_service")
         .add_attribute("service_id", service_id)
+        .add_attribute("description", description)
         .add_attribute("price", price.to_string())
         .add_attribute("category", category))
 }
