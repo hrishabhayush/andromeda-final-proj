@@ -1,17 +1,14 @@
-#[cfg(not(feature = "library"))]
-use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
 use andromeda_std::{
     ado_base::InstantiateMsg as BaseInstantiateMsg,
-    ado_contract::{
-        ADOContract,
-    },
+    ado_contract::ADOContract,
     common::{actions::call_action, context::ExecuteContext},
     error::ContractError,
 };
+#[cfg(not(feature = "library"))]
+use cosmwasm_std::entry_point;
+use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
 
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
-
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:skills-marketplace";
@@ -24,8 +21,6 @@ pub fn instantiate(
     info: MessageInfo,
     msg: InstantiateMsg,
 ) -> Result<Response, ContractError> {
-    
-
     let contract = ADOContract::default();
 
     let resp = contract.instantiate(
@@ -44,28 +39,25 @@ pub fn instantiate(
 
     Ok(resp
         .add_attribute("method", "instantiate")
-        .add_attribute("owner", info.sender)
-        )
+        .add_attribute("owner", info.sender))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn execute(deps: DepsMut, env: Env, info: MessageInfo, msg: ExecuteMsg) -> Result<Response, ContractError> {
+pub fn execute(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    msg: ExecuteMsg,
+) -> Result<Response, ContractError> {
     let ctx = ExecuteContext::new(deps, info, env);
     if let ExecuteMsg::AMPReceive(pkt) = msg {
-        ADOContract::default().execute_amp_receive(
-            ctx,
-            pkt,
-            handle_execute,
-        )
+        ADOContract::default().execute_amp_receive(ctx, pkt, handle_execute)
     } else {
         handle_execute(ctx, msg)
     }
 }
 
-pub fn handle_execute(
-    mut ctx: ExecuteContext,
-    msg: ExecuteMsg,
-) -> Result<Response, ContractError> {
+pub fn handle_execute(mut ctx: ExecuteContext, msg: ExecuteMsg) -> Result<Response, ContractError> {
     let action_response = call_action(
         &mut ctx.deps,
         &ctx.info,
@@ -75,18 +67,24 @@ pub fn handle_execute(
     )?;
 
     let res = match msg {
-        ExecuteMsg::ListService { service_id, description, price, category } => {
-            list_service(ctx, service_id, description, price, category)
-        }
+        ExecuteMsg::ListService {
+            service_id,
+            description,
+            price,
+            category,
+        } => list_service(ctx, service_id, description, price, category),
         ExecuteMsg::PurchaseService { service_id, buyer } => {
             purchase_service(ctx, service_id, buyer)
         }
-        ExecuteMsg::LeaveReview { service_id, rating, feedback } => {
-            leave_review(ctx, service_id, rating, feedback)
-        }
-        ExecuteMsg::ResolveDispute { service_id, resolution } => {
-            resolve_dispute(ctx, service_id, resolution)
-        }
+        ExecuteMsg::LeaveReview {
+            service_id,
+            rating,
+            feedback,
+        } => leave_review(ctx, service_id, rating, feedback),
+        ExecuteMsg::ResolveDispute {
+            service_id,
+            resolution,
+        } => resolve_dispute(ctx, service_id, resolution),
         _ => ADOContract::default().execute(ctx, msg),
     }?;
 
@@ -99,9 +97,9 @@ pub fn handle_execute(
 fn list_service(
     ctx: ExecuteContext,
     service_id: String,
-    description: String, 
+    description: String,
     price: u128,
-    category: String, 
+    category: String,
 ) -> Result<Response, ContractError> {
     // Implement service listing logic (e.g., store in state)
     Ok(Response::new()
@@ -133,7 +131,7 @@ fn leave_review(
     Ok(Response::new()
         .add_attribute("action", "leave_review")
         .add_attribute("service_id", service_id)
-        .add_attribute("rating", rating.to_string())) 
+        .add_attribute("rating", rating.to_string()))
 }
 
 fn resolve_dispute(
@@ -145,7 +143,7 @@ fn resolve_dispute(
     Ok(Response::new()
         .add_attribute("action", "resolve_dispute")
         .add_attribute("service_id", service_id)
-        .add_attribute("resolution", resolution))   
+        .add_attribute("resolution", resolution))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]

@@ -11,7 +11,7 @@ pub enum ContractError {
 
     #[error("Insufficient funds")]
     InsufficientFunds,
-    
+
     #[error("Unauthorized")]
     Unauthorized,
     // Add any other custom errors you like here.
