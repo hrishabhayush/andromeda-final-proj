@@ -75,8 +75,19 @@ pub fn handle_execute(
     )?;
 
     let res = match msg {
-        
-        _ => ADOContract::default().execute(ctx, msg)
+        ExecuteMsg::ListService { service_id, description, price, category } => {
+            list_service(ctx, service_id, description, price, category)
+        }
+        ExecuteMsg::PurchaseService { service_id, buyer } => {
+            purchase_service(ctx, service_id, buyer)
+        }
+        ExecuteMsg::LeaveReview { service_id, rating, feedback } => {
+            leave_review(ctx, service_id, rating, feedback)
+        }
+        ExecuteMsg::ResolveDispute { service_id, resolution } => {
+            resolve_dispute(ctx, service_id, resolution)
+        }
+        _ => ADOContract::default().execute(ctx, msg),
     }?;
 
     Ok(res
@@ -85,11 +96,61 @@ pub fn handle_execute(
         .add_events(action_response.events))
 }
 
+fn list_service(
+    ctx: ExecuteContext,
+    service_id: String,
+    description: String, 
+    price: u128,
+    category: String, 
+) -> Result<Response, ContractError> {
+    // Implement service listing logic (e.g., store in state)
+    Ok(Response::new()
+        .add_attribute("action", "list_service")
+        .add_attribute("service_id", service_id)
+        .add_attribute("price", price.to_string())
+        .add_attribute("category", category))
+}
+
+fn purchase_service(
+    ctx: ExecuteContext,
+    service_id: String,
+    buyer: String,
+) -> Result<Response, ContractError> {
+    // Implement purchase service logic here
+    Ok(Response::new()
+        .add_attribute("action", "purchase_service")
+        .add_attribute("service_id", service_id)
+        .add_attribute("buyer", buyer))
+}
+
+fn leave_review(
+    ctx: ExecuteContext,
+    service_id: String,
+    rating: u8,
+    feedback: String,
+) -> Result<Response, ContractError> {
+    // Implement review logic (e.g., store review in state)
+    Ok(Response::new()
+        .add_attribute("action", "leave_review")
+        .add_attribute("service_id", service_id)
+        .add_attribute("rating", rating.to_string())) 
+}
+
+fn resolve_dispute(
+    ctx: ExecuteContext,
+    service_id: String,
+    resolution: String,
+) -> Result<Response, ContractError> {
+    // Implement dispute resolution logic
+    Ok(Response::new()
+        .add_attribute("action", "resolve_dispute")
+        .add_attribute("service_id", service_id)
+        .add_attribute("resolution", resolution))   
+}
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
-        
         _ => ADOContract::default().query(deps, env, msg),
     }
 }
