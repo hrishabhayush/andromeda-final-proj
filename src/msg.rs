@@ -1,10 +1,12 @@
-use andromeda_std::{andr_exec, andr_instantiate, andr_query};
 use cosmwasm_schema::{cw_serde, QueryResponses};
+use cosmwasm_std::Addr;
+use andromeda_std::{andr_exec, andr_instantiate, andr_query};
+use crate::responses::{ServiceDetailsResponse, ListServicesResponse, ProviderReviewsResponse};
 
 #[andr_instantiate]
 #[cw_serde]
 pub struct InstantiateMsg {
-    pub admin: String,
+    pub admin: Addr,
     pub platform_fee: u128,
 }
 
@@ -19,7 +21,7 @@ pub enum ExecuteMsg {
     },
     PurchaseService {
         service_id: String,
-        buyer: String,
+        buyer: Addr,
     },
     LeaveReview {
         service_id: String,
@@ -35,4 +37,11 @@ pub enum ExecuteMsg {
 #[andr_query]
 #[cw_serde]
 #[derive(QueryResponses)]
-pub enum QueryMsg {}
+pub enum QueryMsg {
+    #[returns(ServiceDetailsResponse)]
+    GetServiceDetails { service_id: String },
+    #[returns(ListServicesResponse)]
+    ListServices { category: Option<String> },
+    #[returns(ProviderReviewsResponse)]
+    GetProviderReviews { provider_id: String },
+}

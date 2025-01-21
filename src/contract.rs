@@ -6,9 +6,13 @@ use andromeda_std::{
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Binary, Deps, DepsMut, Env, MessageInfo, Response};
+use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
 
-use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
+use crate::{
+    state::{DISPUTE, PURCHASES, REVIEW_METADATA, REVIEWS, SERVICES, Dispute, Review, ReviewMetadata, Service},
+    msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    responses::{ListServicesResponse, ProviderReviewsResponse, ServiceDetailsResponse},
+};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:skills-marketplace";
@@ -113,7 +117,7 @@ fn list_service(
 fn purchase_service(
     ctx: ExecuteContext,
     service_id: String,
-    buyer: String,
+    buyer: Addr,
 ) -> Result<Response, ContractError> {
     // Implement purchase service logic here
     Ok(Response::new()
