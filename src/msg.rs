@@ -1,7 +1,7 @@
+use crate::responses::{ListServicesResponse, ProviderReviewsResponse, ServiceDetailsResponse};
+use andromeda_std::{andr_exec, andr_instantiate, andr_query};
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::Addr;
-use andromeda_std::{andr_exec, andr_instantiate, andr_query};
-use crate::responses::{ServiceDetailsResponse, ListServicesResponse, ProviderReviewsResponse};
 
 #[andr_instantiate]
 #[cw_serde]

@@ -9,9 +9,11 @@ use cosmwasm_std::entry_point;
 use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
 
 use crate::{
-    state::{DISPUTE, PURCHASES, REVIEW_METADATA, REVIEWS, SERVICES, Review, ReviewMetadata, Service},
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
     responses::{ListServicesResponse, ProviderReviewsResponse, ServiceDetailsResponse},
+    state::{
+        Review, ReviewMetadata, Service, DISPUTE, PURCHASES, REVIEWS, REVIEW_METADATA, SERVICES,
+    },
 };
 
 // version info for migration info
@@ -109,7 +111,9 @@ fn list_service(
 
     // Ensure the service does not already exist
     if SERVICES.has(ctx.deps.storage, service_id.clone()) {
-        return Err(ContractError::Std(StdError::generic_err("Service already exists")));
+        return Err(ContractError::Std(StdError::generic_err(
+            "Service already exists",
+        )));
     }
 
     let service = Service {
@@ -121,7 +125,6 @@ fn list_service(
     };
 
     SERVICES.save(ctx.deps.storage, service_id.clone(), &service);
-
 
     Ok(Response::new()
         .add_attribute("action", "list_service")
@@ -140,11 +143,15 @@ fn purchase_service(
     // Check if the service exists
     let service = SERVICES.load(ctx.deps.storage, service_id.clone())?;
 
-    PURCHASES.update(ctx.deps.storage, service_id.clone(), |purchases| -> StdResult<_> {
-        let mut purchases = purchases.unwrap_or_default();
-        purchases.push(buyer.clone());
-        Ok(purchases)
-    })?;
+    PURCHASES.update(
+        ctx.deps.storage,
+        service_id.clone(),
+        |purchases| -> StdResult<_> {
+            let mut purchases = purchases.unwrap_or_default();
+            purchases.push(buyer.clone());
+            Ok(purchases)
+        },
+    )?;
 
     Ok(Response::new()
         .add_attribute("action", "purchase_service")
@@ -160,9 +167,11 @@ fn leave_review(
 ) -> Result<Response, ContractError> {
     let sender = ctx.info.sender;
 
-     // Validate the rating
-     if rating > 5 {
-        return Err(ContractError::Std(StdError::generic_err("Rating must be between 0 and 5")));
+    // Validate the rating
+    if rating > 5 {
+        return Err(ContractError::Std(StdError::generic_err(
+            "Rating must be between 0 and 5",
+        )));
     }
 
     let review = Review {
@@ -172,30 +181,37 @@ fn leave_review(
         feedback,
     };
 
-    REVIEWS.update(ctx.deps.storage, service_id.clone(), |reviews| -> StdResult<_> {
-        let mut reviews = reviews.unwrap_or_default();
-        reviews.push(review.clone());
-        Ok(reviews)
-    })?;
+    REVIEWS.update(
+        ctx.deps.storage,
+        service_id.clone(),
+        |reviews| -> StdResult<_> {
+            let mut reviews = reviews.unwrap_or_default();
+            reviews.push(review.clone());
+            Ok(reviews)
+        },
+    )?;
 
-    REVIEW_METADATA.update(ctx.deps.storage, service_id.clone(), |metadata| -> StdResult<_> {
-        let mut metadata = metadata.unwrap_or(ReviewMetadata {
-            total_count: 0,
-            average_rating: 0.0,
-        });
-        metadata.total_count += 1;
-        metadata.average_rating =
-            ((metadata.average_rating * (metadata.total_count - 1) as f32) + rating as f32)
-                / metadata.total_count as f32;
-        Ok(metadata)
-    })?;
+    REVIEW_METADATA.update(
+        ctx.deps.storage,
+        service_id.clone(),
+        |metadata| -> StdResult<_> {
+            let mut metadata = metadata.unwrap_or(ReviewMetadata {
+                total_count: 0,
+                average_rating: 0.0,
+            });
+            metadata.total_count += 1;
+            metadata.average_rating =
+                ((metadata.average_rating * (metadata.total_count - 1) as f32) + rating as f32)
+                    / metadata.total_count as f32;
+            Ok(metadata)
+        },
+    )?;
 
     Ok(Response::new()
         .add_attribute("action", "leave_review")
         .add_attribute("service_id", service_id)
         .add_attribute("rating", rating.to_string())
         .add_attribute("sender", sender))
-        
 }
 
 fn resolve_dispute(
@@ -206,20 +222,24 @@ fn resolve_dispute(
     let sender = ctx.info.sender;
 
     // Update the dispute resolution
-    DISPUTE.update(ctx.deps.storage, service_id.clone(), |disputes| -> StdResult<_> {
-        let mut disputes = disputes.unwrap_or_default();
+    DISPUTE.update(
+        ctx.deps.storage,
+        service_id.clone(),
+        |disputes| -> StdResult<_> {
+            let mut disputes = disputes.unwrap_or_default();
 
-        // Find the first unresolved dispute
-        if let Some(dispute) = disputes.iter_mut().find(|d| d.resolution.is_none()) {
-            dispute.resolution = Some(resolution.clone());
-        } else {
-            return Err(StdError::generic_err(
-                "No unresolved disputes for this service",
-            ).into());
-        }
+            // Find the first unresolved dispute
+            if let Some(dispute) = disputes.iter_mut().find(|d| d.resolution.is_none()) {
+                dispute.resolution = Some(resolution.clone());
+            } else {
+                return Err(
+                    StdError::generic_err("No unresolved disputes for this service").into(),
+                );
+            }
 
-        Ok(disputes)
-    })?;
+            Ok(disputes)
+        },
+    )?;
 
     Ok(Response::new()
         .add_attribute("action", "resolve_dispute")
