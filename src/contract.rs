@@ -1,7 +1,7 @@
 use andromeda_std::{
     ado_base::InstantiateMsg as BaseInstantiateMsg,
     ado_contract::ADOContract,
-    common::{actions::call_action, context::ExecuteContext, response},
+    common::{actions::call_action, context::ExecuteContext},
     error::ContractError,
 };
 #[cfg(not(feature = "library"))]
@@ -10,7 +10,6 @@ use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdE
 
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
-    responses::{ListServicesResponse, ProviderReviewsResponse, ServiceDetailsResponse},
     state::{
         Review, ReviewMetadata, Service, DISPUTE, PURCHASES, REVIEWS, REVIEW_METADATA, SERVICES,
     },
@@ -124,7 +123,7 @@ fn list_service(
         owner: sender.clone(),
     };
 
-    SERVICES.save(ctx.deps.storage, service_id.clone(), &service);
+    SERVICES.save(ctx.deps.storage, service_id.clone(), &service)?;
 
     Ok(Response::new()
         .add_attribute("action", "list_service")
@@ -232,9 +231,9 @@ fn resolve_dispute(
             if let Some(dispute) = disputes.iter_mut().find(|d| d.resolution.is_none()) {
                 dispute.resolution = Some(resolution.clone());
             } else {
-                return Err(
-                    StdError::generic_err("No unresolved disputes for this service").into(),
-                );
+                return Err(StdError::generic_err(
+                    "No unresolved disputes for this service",
+                ));
             }
 
             Ok(disputes)
