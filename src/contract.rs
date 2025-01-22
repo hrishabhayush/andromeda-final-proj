@@ -6,10 +6,14 @@ use andromeda_std::{
 };
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{Addr, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdError, StdResult};
+use cosmwasm_std::{
+    to_json_binary, Addr, Binary, Deps, DepsMut, Env, MessageInfo, Order, Response, StdError,
+    StdResult,
+};
 
 use crate::{
     msg::{ExecuteMsg, InstantiateMsg, QueryMsg},
+    responses::{ListServicesResponse, ServiceDetailsResponse, ServiceSummary},
     state::{
         Review, ReviewMetadata, Service, DISPUTE, PURCHASES, REVIEWS, REVIEW_METADATA, SERVICES,
     },
@@ -250,6 +254,66 @@ fn resolve_dispute(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
+        QueryMsg::GetServiceDetails { service_id } => {
+            let service = SERVICES.load(deps.storage, service_id.clone())?;
+            let _purchases: Vec<Addr> = PURCHASES
+                .may_load(deps.storage, service_id.clone())?
+                .unwrap_or_default();
+            let _reviews: Vec<Review> = REVIEWS
+                .may_load(deps.storage, service_id.clone())?
+                .unwrap_or_default();
+            let _metadata = REVIEW_METADATA
+                .may_load(deps.storage, service_id)?
+                .unwrap_or(ReviewMetadata {
+                    total_count: 0,
+                    average_rating: 0.0,
+                });
+
+            let response = ServiceDetailsResponse {
+                service_id: service.service_id,
+                description: service.description,
+                price: service.price,
+                category: service.category,
+                owner: service.owner,
+            };
+
+            to_json_binary(&response).map_err(|e| e.into())
+        }
+        QueryMsg::ListServices { category } => {
+            let services: Vec<ServiceSummary> = if let Some(cat) = category {
+                SERVICES
+                    .range(deps.storage, None, None, Order::Ascending)
+                    .filter_map(|r| {
+                        let service = r.unwrap().1;
+                        if service.category == cat {
+                            Some(ServiceSummary {
+                                service_id: service.service_id,
+                                description: service.description,
+                                price: service.price,
+                                category: service.category,
+                            })
+                        } else {
+                            None
+                        }
+                    })
+                    .collect()
+            } else {
+                SERVICES
+                    .range(deps.storage, None, None, Order::Ascending)
+                    .map(|r| {
+                        let service = r.unwrap().1;
+                        ServiceSummary {
+                            service_id: service.service_id,
+                            description: service.description,
+                            price: service.price,
+                            category: service.category,
+                        }
+                    })
+                    .collect()
+            };
+
+            to_json_binary(&ListServicesResponse { services }).map_err(|e| e.into())
+        }
         _ => ADOContract::default().query(deps, _env, msg),
     }
 }
