@@ -1,7 +1,7 @@
 use andromeda_std::{
     ado_base::InstantiateMsg as BaseInstantiateMsg,
     ado_contract::ADOContract,
-    common::{actions::call_action, context::ExecuteContext},
+    common::{actions::call_action, context::ExecuteContext, response},
     error::ContractError,
 };
 #[cfg(not(feature = "library"))]
@@ -141,7 +141,7 @@ fn purchase_service(
     buyer: Addr,
 ) -> Result<Response, ContractError> {
     // Check if the service exists
-    let service = SERVICES.load(ctx.deps.storage, service_id.clone())?;
+    let _service = SERVICES.load(ctx.deps.storage, service_id.clone())?;
 
     PURCHASES.update(
         ctx.deps.storage,
@@ -249,9 +249,9 @@ fn resolve_dispute(
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
-        _ => ADOContract::default().query(deps, env, msg),
+        _ => ADOContract::default().query(deps, _env, msg),
     }
 }
 
