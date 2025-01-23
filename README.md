@@ -1,4 +1,4 @@
-# Andromeda CosmWasm Starter Pack
+# Andromeda Decentralized Skills MarketPlace
 
 **This repo is a variant of the [CosmWasm starter template](https://github.com/CosmWasm/cw-template).**
 
