@@ -1,116 +1,157 @@
-# Andromeda Decentralized Skills MarketPlace
+# Skills Marketplace README
 
-**This repo is a variant of the [CosmWasm starter template](https://github.com/CosmWasm/cw-template).**
+## Overview
 
-## Documentation
+The **Skills Marketplace** is a decentralized platform that facilitates seamless interactions between service providers and seekers. It provides a transparent and secure environment for listing services, purchasing services, leaving reviews, and resolving disputes.
 
-To see what's involved in making an ADO check out our documentation [here](https://docs.andromedaprotocol.io/andromeda/creating-an-ado/getting-started).
-
-# Skills Marketplace
-
-Skills Marketplace is a smart contract built using CosmWasm that allows users to list services, purchase services, leave reviews, and resolve disputes. This contract is designed to facilitate a decentralized marketplace for various skills and services. The marketplace allows freelancers to sell their expertise and buyers to list their projects on the platform for these freelancers. 
+---
 
 ## Features
 
-- **List Services**: Users can list their services with a description, price, and category.
-- **Purchase Services**: Users can purchase listed services.
-- **Leave Reviews**: Users can leave reviews for purchased services.
-- **Resolve Disputes**: Disputes can be resolved by the service provider or an arbitrator.
+### Core Functionalities
+1. **Service Listing**
+   - Service providers can list services with detailed attributes like description, price, and category.
+   - Metadata is stored for efficient querying.
 
-## Contract Structure
+2. **Service Purchase**
+   - Users can purchase services directly from providers, with the platform collecting a configurable platform fee.
 
-### Messages
+3. **Review System**
+   - Buyers can leave ratings and feedback on purchased services.
+   - Aggregated review metadata, such as average ratings and total reviews, is maintained for better insights.
 
-#### ExecuteMsg
+4. **Dispute Resolution**
+   - Mechanisms for resolving disputes, with all resolutions securely stored.
 
-- `ListService { service_id, description, price, category }`
-- `PurchaseService { service_id, buyer }`
-- `LeaveReview { service_id, rating, feedback }`
-- `ResolveDispute { service_id, resolution }`
+### Query Functionalities
+- Retrieve details about specific services.
+- List services by category or retrieve all available services.
+- Fetch reviews and ratings for service providers.
 
-#### QueryMsg
+---
 
-- `GetServiceDetails { service_id }`
-- `ListServices { category }`
+## Message Types
 
-### Responses
+### InstantiateMsg
+Used during contract initialization:
+- `admin`: Address of the platform administrator.
+- `platform_fee`: Fee percentage collected for each transaction.
 
-- `ServiceDetailsResponse`
-- `ListServicesResponse`
-- `ServiceSummary`
-- `ProviderReviewsResponse`
-- `ReviewSummary`
+### ExecuteMsg
+Available actions:
+- **ListService**: Add a new service with its details.
+- **PurchaseService**: Purchase a service using the service ID and buyer's address.
+- **LeaveReview**: Submit a rating and feedback for a service.
+- **ResolveDispute**: Submit a resolution for a dispute.
 
-## Usage
+### QueryMsg
+Read-only operations:
+- **GetServiceDetails**: Fetch detailed information for a service.
+- **ListServices**: List services, optionally filtered by category.
+- **GetProviderReviews**: Retrieve reviews for a specific provider.
 
-### Instantiate
+---
 
-To instantiate the contract, use the following message:
+## Data Structures
 
-```json
-{
-  "instantiate": {
-    "kernel_address": "your_kernel_address",
-    "owner": "your_owner_address"
-  }
+### Service
+Represents a listed service:
+```rust
+pub struct Service {
+    pub service_id: String,
+    pub description: String,
+    pub price: u128,
+    pub category: String,
+    pub owner: Addr,
 }
 ```
 
-### Execute 
-
-To execute various actions, use the following messages:
-
-```json
-{
-  "list_service": {
-    "service_id": "unique_service_id",
-    "description": "service_description",
-    "price": 100,
-    "category": "service_category"
-  }
+### Review 
+Details about feedback for services:
+```rust 
+pub struct Review {
+    pub service_id: String,
+    pub reviewer: Addr,
+    pub rating: u8,
+    pub feedback: String,
 }
 ```
 
-### Purchase Service 
-
-To purchase a service from a freelancer, the message is:
-
-```json
-{
-  "purchase_service": {
-    "service_id": "unique_service_id",
-    "buyer": "buyer_address"
-  }
+### ReviewMetaData
+Aggregated review statistics to give an information about a freelancer
+```rust
+pub struct ReviewMetadata {
+    pub total_count: u32,
+    pub average_rating: f32,
 }
 ```
 
-### Leave Review
-
-When a buyer wants to leave a review for a freelancer or a service, they use the following message:
-
-```json
-{
-  "leave_review": {
-    "service_id": "unique_service_id",
-    "rating": 5,
-    "feedback": "Great service!"
-  }
+### Dispute
+Represents a dispute resolution process:
+```rust
+pub struct Dispute {
+    pub service_id: String,
+    pub disputant: Addr,
+    pub description: String,
+    pub resolution: Option<String>,
 }
 ```
 
-### Resolve dispute
+## Storage
 
-In case of any dispute, the message is:
+### Maps
+```rust
+pub const SERVICES: Map<String, Service> = Map::new("services");
+pub const REVIEWS: Map<String, Vec<Review>> = Map::new("reviews");
+pub const REVIEW_METADATA: Map<String, ReviewMetadata> = Map::new("review_metadata");
+pub const PURCHASES: Map<String, Vec<Addr>> = Map::new("purchases");
+pub const DISPUTES: Map<String, Vec<Dispute>> = Map::new("disputes");
+```
 
-```json
-{
-  "resolve_dispute": {
-    "service_id": "unique_service_id",
-    "resolution": "resolved"
-  }
+## Responses 
+
+### ServiceDetailsResponse
+Details about a specific service:
+```rust
+pub struct ServiceDetailsResponse {
+    pub service_id: String,
+    pub description: String,
+    pub price: u128,
+    pub category: String,
+    pub owner: Addr,
 }
 ```
 
+### ListServicesResponse
+List of summarized services:
+```rust
+pub struct ListServicesResponse {
+    pub services: Vec<ServiceSummary>,
+}
+```
+
+### ProviderReviewsResponse
+Reviews and ratings for a freelancer:
+```rust
+pub struct ProviderReviewsResponse {
+    pub provider_id: Addr,
+    pub reviews: Vec<ReviewSummary>,
+}
+```
+
+## Development
+
+### Prerequisites
+- Rust environment with `cargo` installed.
+- CosmWasm development environment set up.
+
+### Build Instructions
+1. Clone the repository.
+2. Navigate to the project directory.
+3. Build the contract:
+   ```bash
+   cargo build --release
+   ```
 
 ## Query 
 
@@ -135,14 +176,6 @@ To query the contract, use the following messages:
   }
 }
 ```
-
-## Development 
-
-### Prerequisites 
-
-- Rust
-- Cargo 
-- CosmWasm
 
 ### Building 
 
