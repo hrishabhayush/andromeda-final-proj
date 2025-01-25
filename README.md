@@ -173,7 +173,3 @@ To lint the code, run:
 ```sh
 cargo clippy -- -D warnings
 ```
-
-## License 
-
-This project is licensed under the MIT License. 
