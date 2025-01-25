@@ -6,88 +6,174 @@
 
 To see what's involved in making an ADO check out our documentation [here](https://docs.andromedaprotocol.io/andromeda/creating-an-ado/getting-started).
 
-# CosmWasm Template ReadMe
+# Skills Marketplace
 
-This is a template to build smart contracts in Rust to run inside a
-[Cosmos SDK](https://github.com/cosmos/cosmos-sdk) module on all chains that enable it.
-To understand the framework better, please read the overview in the
-[cosmwasm repo](https://github.com/CosmWasm/cosmwasm/blob/master/README.md),
-and dig into the [cosmwasm docs](https://www.cosmwasm.com).
-This assumes you understand the theory and just want to get coding.
+Skills Marketplace is a smart contract built using CosmWasm that allows users to list services, purchase services, leave reviews, and resolve disputes. This contract is designed to facilitate a decentralized marketplace for various skills and services. The marketplace allows freelancers to sell their expertise and buyers to list their projects on the platform for these freelancers. 
 
-## Creating a new repo from template
+## Features
 
-Assuming you have a recent version of Rust and Cargo installed
-(via [rustup](https://rustup.rs/)),
-then the following should get you a new repo to start a contract:
+- **List Services**: Users can list their services with a description, price, and category.
+- **Purchase Services**: Users can purchase listed services.
+- **Leave Reviews**: Users can leave reviews for purchased services.
+- **Resolve Disputes**: Disputes can be resolved by the service provider or an arbitrator.
 
-Install [cargo-generate](https://github.com/ashleygwilliams/cargo-generate) and cargo-run-script.
-Unless you did that before, run this line now:
+## Contract Structure
 
-```sh
-cargo install cargo-generate --features vendored-openssl
-cargo install cargo-run-script
+### Messages
+
+#### ExecuteMsg
+
+- `ListService { service_id, description, price, category }`
+- `PurchaseService { service_id, buyer }`
+- `LeaveReview { service_id, rating, feedback }`
+- `ResolveDispute { service_id, resolution }`
+
+#### QueryMsg
+
+- `GetServiceDetails { service_id }`
+- `ListServices { category }`
+
+### Responses
+
+- `ServiceDetailsResponse`
+- `ListServicesResponse`
+- `ServiceSummary`
+- `ProviderReviewsResponse`
+- `ReviewSummary`
+
+## Usage
+
+### Instantiate
+
+To instantiate the contract, use the following message:
+
+```json
+{
+  "instantiate": {
+    "kernel_address": "your_kernel_address",
+    "owner": "your_owner_address"
+  }
+}
 ```
 
-Now, use it to create your new contract.
-Go to the folder in which you want to place it and run:
+### Execute 
 
-**Latest**
+To execute various actions, use the following messages:
 
-```sh
-cargo generate --git https://github.com/andromedaprotocol/andr-cw-template.git --name PROJECT_NAME
+```json
+{
+  "list_service": {
+    "service_id": "unique_service_id",
+    "description": "service_description",
+    "price": 100,
+    "category": "service_category"
+  }
+}
 ```
 
-For cloning minimal code repo:
+### Purchase Service 
 
-```sh
-cargo generate --git https://github.com/andromedaprotocol/andr-cw-template.git --name PROJECT_NAME -d minimal=true
+To purchase a service from a freelancer, the message is:
+
+```json
+{
+  "purchase_service": {
+    "service_id": "unique_service_id",
+    "buyer": "buyer_address"
+  }
+}
 ```
 
-You will now have a new folder called `PROJECT_NAME` (I hope you changed that to something else)
-containing a simple working contract and build system that you can customize.
+### Leave Review
 
-## Create a Repo
+When a buyer wants to leave a review for a freelancer or a service, they use the following message:
 
-After generating, you have a initialized local git repo, but no commits, and no remote.
-Go to a server (eg. github) and create a new upstream repo (called `YOUR-GIT-URL` below).
-Then run the following:
-
-```sh
-# this is needed to create a valid Cargo.lock file (see below)
-cargo check
-git branch -M main
-git add .
-git commit -m 'Initial Commit'
-git remote add origin YOUR-GIT-URL
-git push -u origin main
+```json
+{
+  "leave_review": {
+    "service_id": "unique_service_id",
+    "rating": 5,
+    "feedback": "Great service!"
+  }
+}
 ```
 
-## CI Support
+### Resolve dispute
 
-We have template configurations for both [GitHub Actions](.github/workflows/Basic.yml)
-and [Circle CI](.circleci/config.yml) in the generated project, so you can
-get up and running with CI right away.
+In case of any dispute, the message is:
 
-One note is that the CI runs all `cargo` commands
-with `--locked` to ensure it uses the exact same versions as you have locally. This also means
-you must have an up-to-date `Cargo.lock` file, which is not auto-generated.
-The first time you set up the project (or after adding any dep), you should ensure the
-`Cargo.lock` file is updated, so the CI will test properly. This can be done simply by
-running `cargo check` or `cargo unit-test`.
+```json
+{
+  "resolve_dispute": {
+    "service_id": "unique_service_id",
+    "resolution": "resolved"
+  }
+}
+```
 
-## Using your project
 
-Once you have your custom repo, you should check out [Developing](./Developing.md) to explain
-more on how to run tests and develop code. Or go through the
-[online tutorial](https://docs.cosmwasm.com/) to get a better feel
-of how to develop.
+## Query 
 
-[Publishing](./Publishing.md) contains useful information on how to publish your contract
-to the world, once you are ready to deploy it on a running blockchain. And
-[Importing](./Importing.md) contains information about pulling in other contracts or crates
-that have been published.
+To query the contract, use the following messages:
 
-Please replace this README file with information about your specific project. You can keep
-the `Developing.md` and `Publishing.md` files as useful references, but please set some
-proper description in the README.
+### Get Service details:
+
+```json 
+{
+  "get_service_details": {
+    "service_id": "unique_service_id"
+  }
+}
+```
+
+### List Services
+
+```json
+{
+  "list_services": {
+    "category": "service_category"
+  }
+}
+```
+
+## Development 
+
+### Prerequisites 
+
+- Rust
+- Cargo 
+- CosmWasm
+
+### Building 
+
+To build the contract, run: 
+
+```sh
+cargo build --release
+```
+
+### Testing 
+
+To run test, use:
+
+```sh
+cargo test
+```
+
+### Formatting and Linting
+
+To format the code properly, run:
+
+```sh
+cargo fmt
+```
+
+To lint the code, run:
+
+```sh
+cargo clippy -- -D warnings
+```
+
+## License 
+
+This project is licensed under the MIT License. 
